@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz ENAREF Mobile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #eef2f5; margin: 10px; padding: 10px; }
+    h1 { text-align: center; font-size: 1.4em; }
+    .question { background: #fff; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    label { display: block; margin-bottom: 8px; font-size: 1em; }
+    input[type="radio"] { margin-right: 8px; transform: scale(1.2); }
+    button { background-color: #007ACC; color: white; border: none; padding: 12px; font-size: 1em; width: 100%; border-radius: 6px; cursor: pointer; margin-top: 20px; }
+    button:hover { background-color: #005fa3; }
+    .explanation { margin-top: 10px; font-size: 0.95em; font-weight: bold; }
+    #score { margin-top: 20px; font-size: 1.2em; text-align: center; }
+  </style>
+</head>
+<body>
+
+<h1>📚 Quiz ENAREF — Version mobile</h1>
+<div id="quiz-container"></div>
+<button onclick="calculateScore()">✅ Valider mes réponses</button>
+<div id="score"></div>
+
+<script>
+const quizData = [
+  {
+    question: "Quel est le rôle principal du droit administratif ?",
+    options: ["Réguler les relations entre les particuliers", "Organiser les relations entre l'administration et les citoyens", "Gérer les conflits internationaux", "Superviser les activités commerciales"],
+    answer: 1,
+    explanation: "Le droit administratif régit les relations entre l'administration et les citoyens."
+  },
+  {
+    question: "Quelle est la formule de base de la comptabilité ?",
+    options: ["Actifs = Passifs + Capitaux propres", "Revenus = Dépenses + Bénéfices", "Actifs = Capitaux propres - Passifs", "Dépenses = Revenus - Bénéfices"],
+    answer: 0,
+    explanation: "La formule fondamentale est Actifs = Passifs + Capitaux propres."
+  },
+  // 💡 Tu pourras insérer ici les prochaines séries que je te générerai
+];
+
+function loadQuiz() {
+  const container = document.getElementById("quiz-container");
+  quizData.forEach((item, index) => {
+    const block = document.createElement("div");
+    block.className = "question";
+    block.innerHTML = `<p><strong>Q${index + 1}.</strong> ${item.question}</p>`;
+    item.options.forEach((opt, i) => {
+      block.innerHTML += `<label><input type="radio" name="q${index}" value="${i}"> ${opt}</label>`;
+    });
+    block.innerHTML += `<div id="explain${index}" class="explanation"></div>`;
+    container.appendChild(block);
+  });
+}
+
+function calculateScore() {
+  let score = 0;
+  quizData.forEach((item, index) => {
+    const selected = document.querySelector(`input[name="q${index}"]:checked`);
+    const explanationBox = document.getElementById(`explain${index}`);
+    if (selected) {
+      if (parseInt(selected.value) === item.answer) {
+        score++;
+        explanationBox.innerHTML = "✅ Bonne réponse !<br>" + item.explanation;
+        explanationBox.style.color = "green";
+      } else {
+        explanationBox.innerHTML = "❌ Mauvaise réponse.<br>" + item.explanation;
+        explanationBox.style.color = "red";
+      }
+    } else {
+      explanationBox.innerHTML = "❌ Pas de réponse sélectionnée.<br>" + item.explanation;
+      explanationBox.style.color = "gray";
+    }
+  });
+  document.getElementById("score").innerHTML = `<h3>🎯 Résultat : ${score} / ${quizData.length}</h3>`;
+}
+
+loadQuiz();
+</script>
+
+</body>
+  </html>
