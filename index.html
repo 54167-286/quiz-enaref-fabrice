@@ -2,43 +2,479 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Quiz ENAREF Mobile</title>
+  <title>Quiz ENAREF</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: Arial, sans-serif; background-color: #eef2f5; margin: 10px; padding: 10px; }
-    h1 { text-align: center; font-size: 1.4em; }
-    .question { background: #fff; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-    label { display: block; margin-bottom: 8px; font-size: 1em; }
-    input[type="radio"] { margin-right: 8px; transform: scale(1.2); }
-    button { background-color: #007ACC; color: white; border: none; padding: 12px; font-size: 1em; width: 100%; border-radius: 6px; cursor: pointer; margin-top: 20px; }
-    button:hover { background-color: #005fa3; }
-    .explanation { margin-top: 10px; font-size: 0.95em; font-weight: bold; }
-    #score { margin-top: 20px; font-size: 1.2em; text-align: center; }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #eef2f5;
+      margin: 10px;
+      padding: 10px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.4em;
+      margin-bottom: 20px;
+    }
+    .question {
+      background: #fff;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    input[type="checkbox"] {
+      margin-right: 8px;
+      transform: scale(1.2);
+    }
+    button {
+      background-color: #007ACC;
+      color: white;
+      border: none;
+      padding: 12px;
+      font-size: 1em;
+      width: 100%;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:hover {
+      background-color: #005fa3;
+    }
+    .explanation {
+      margin-top: 10px;
+      font-size: 0.95em;
+      font-weight: bold;
+    }
+    #score {
+      margin-top: 20px;
+      font-size: 1.2em;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
 
-<h1>📚 Quiz ENAREF — Version mobile</h1>
+<h1>📚 Quiz ENAREF</h1>
 <div id="quiz-container"></div>
-<button onclick="calculateScore()">✅ Valider mes réponses</button>
+<button onclick="calculateScore()">✅Valider mes réponses</button>
 <div id="score"></div>
-
 <script>
+
+// ← Colle ici tes objets JavaScript
 const quizData = [
   {
-    question: "Quel est le rôle principal du droit administratif ?",
-    options: ["Réguler les relations entre les particuliers", "Organiser les relations entre l'administration et les citoyens", "Gérer les conflits internationaux", "Superviser les activités commerciales"],
-    answer: 1,
-    explanation: "Le droit administratif régit les relations entre l'administration et les citoyens."
+    question: "Quel document comptable présente l'état du patrimoine d'une entreprise à une date donnée ?",
+    options: ["Bilan", "Compte de résultat", "Journal", "Grand livre"],
+    answer: 0,
+    explanation: "Le bilan retrace les actifs et les passifs à un instant T."
   },
   {
-    question: "Quelle est la formule de base de la comptabilité ?",
-    options: ["Actifs = Passifs + Capitaux propres", "Revenus = Dépenses + Bénéfices", "Actifs = Capitaux propres - Passifs", "Dépenses = Revenus - Bénéfices"],
-    answer: 0,
-    explanation: "La formule fondamentale est Actifs = Passifs + Capitaux propres."
+    question: "Le compte de résultat sert à :",
+    options: [
+      "Montrer la situation financière à une date donnée",
+      "Présenter les performances (produits et charges) sur une période",
+      "Enregistrer les mouvements bancaires",
+      "Lister les immobilisations"
+    ],
+    answer: 1,
+    explanation: "Le compte de résultat fait apparaître les produits et charges sur l’exercice."
   },
-  // 💡 Tu pourras insérer ici les prochaines séries que je te générerai
-];
+  {
+    question: "Dans le Plan Comptable OHADA, les comptes de tiers commencent par quel chiffre ?",
+    options: ["1", "4", "6", "7"],
+    answer: 1,
+    explanation: "Les comptes 40 à 49 désignent les comptes de tiers (clients, fournisseurs…)."
+  },
+  {
+    question: "Quelle méthode d'amortissement répartit linéairement la valeur d'un actif sur sa durée d'utilisation ?",
+    options: ["Dégressif", "Linéaire", "Variable", "Exceptionnel"],
+    answer: 1,
+    explanation: "L’amortissement linéaire répartit chaque année la même valeur."
+  },
+  {
+    question: "Qu'est-ce qu'une provision en comptabilité ?",
+    options: [
+      "Réserve obligatoire",
+      "Charge probable mais non certaine",
+      "Plus-value latente",
+      "Passif exigible"
+    ],
+    answer: 1,
+    explanation: "Une provision anticipe une charge certaine en montant ou en date incertains."
+  },
+  {
+    question: "La TVA est due par :",
+    options: [
+      "Le consommateur final",
+      "L’entreprise acheteuse",
+      "L’État",
+      "Le fournisseur vendeur"
+    ],
+    answer: 3,
+    explanation: "Le fournisseur collecte la TVA auprès du client et la reverse à l’État."
+  },
+  {
+    question: "La base imposable de la TVA correspond à :",
+    options: ["Valeur TTC", "Valeur HT", "Marge brute", "Coût de revient"],
+    answer: 1,
+    explanation: "On taxe la valeur hors taxe (HT) des biens ou services vendus."
+  },
+  {
+    question: "Quel est le taux normal de l'impôt sur les sociétés au Burkina Faso ?",
+    options: ["20%", "25%", "27,5%", "30%"],
+    answer: 2,
+    explanation: "Le taux de base de l'IS au Burkina est de 27,5%."
+  },
+  {
+    question: "En fiscalité, le caractère progressif de l'impôt sur le revenu signifie :",
+    options: [
+      "Un taux unique quel que soit le revenu",
+      "Un taux qui diminue à mesure que les revenus augmentent",
+      "Un taux qui augmente à mesure que les revenus augmentent",
+      "Un taux fixe appliqué à toutes les tranches"
+    ],
+    answer: 2,
+    explanation: "Un impôt est progressif lorsque le taux augmente avec le montant du revenu."
+  },
+  {
+    question: "Le principe de légalité en droit administratif signifie que :",
+    options: [
+      "L'administration peut agir librement",
+      "L'administration ne peut agir que selon la loi",
+      "Les citoyens sont soumis à l'administration",
+      "L'administration est au-dessus des lois"
+    ],
+    answer: 1,
+    explanation: "L’administration est tenue de respecter le cadre légal établi."
+  },
+  {
+    question: "Un acte administratif unilatéral est :",
+    options: [
+      "Un contrat entre deux parties",
+      "Une décision prise par l'administration sans accord du destinataire",
+      "Un accord mutuel entre administration et usager",
+      "Une décision judiciaire"
+    ],
+    answer: 1,
+    explanation: "C’est une décision prise seule par l’administration, sans négociation."
+  },
+  {
+    question: "Le recours gracieux consiste à :",
+    options: [
+      "Saisir le tribunal",
+      "Adresser une demande à l'auteur de la décision de la revoir",
+      "Solliciter un médiateur tiers",
+      "Faire appel devant une cour supérieure"
+    ],
+    answer: 1,
+    explanation: "Le recours gracieux est une demande adressée directement à l'autorité qui a pris la décision."
+  },
+  {
+    question: "La responsabilité de l'administration pour faute suppose :",
+    options: [
+      "Existence d'un dommage",
+      "Existence d'une faute",
+      "Lien de causalité entre la faute et le dommage",
+      "Toutes ces réponses"
+    ],
+    answer: 3,
+    explanation: "Pour engager la responsabilité, il faut dommage, faute et lien de causalité."
+  },
+  {
+    question: "Quel principe garantit l'indépendance de la juridiction administrative ?",
+    options: [
+      "Principe d'égalité",
+      "Principe de séparation des pouvoirs",
+      "Principe de continuité",
+      "Principe d'autorité de la chose jugée"
+    ],
+    answer: 1,
+    explanation: "La séparation des pouvoirs assure une justice administrative indépendante."
+  },
+  {
+    question: "Quel document formalisant un service rendu est indispensable pour justifier une charge en comptabilité ?",
+    options: ["Liasse fiscale", "Facture", "Décision administrative", "Attestation bancaire"],
+    answer: 1,
+    explanation: "Une facture certifie officiellement la fourniture d’un bien ou service."
+  },
+  {
+    question: "Résoudre l'équation 2x - 4 = 10.",
+    options: ["x = 3", "x = 7", "x = -3", "x = -7"],
+    answer: 1,
+    explanation: "2x = 14 ⇒ x = 7."
+  },
+  {
+    question: "Quel est 20% de 150 ?",
+    options: ["15", "20", "30", "35"],
+    answer: 2,
+    explanation: "0,2 × 150 = 30."
+  },
+  {
+    question: "Quelle est la formule pour calculer l'aire d'un cercle ?",
+    options: ["π × r", "2πr", "π × r²", "π / r"],
+    answer: 2,
+    explanation: "Aire = πr²."
+  },
+  {
+    question: "Dans un triangle rectangle de côtés 3 et 4, l'hypoténuse mesure :",
+    options: ["5", "6", "7", "√13"],
+    answer: 0,
+    explanation: "√(3² + 4²) = 5."
+  },
+  {
+    question: "Quelle est la moyenne des nombres 5, 10 et 15 ?",
+    options: ["7,5", "10", "12,5", "15"],
+    answer: 1,
+    explanation: "(5 + 10 + 15) / 3 = 10."
+  },
+  {
+    question: "Qu'est-ce qu'une immobilisation en comptabilité ?",
+    options: [
+      "Une charge constatée d’avance",
+      "Un actif utilisé sur plusieurs exercices",
+      "Une dette à court terme",
+      "Une provision"
+    ],
+    answer: 1,
+    explanation: "Une immobilisation est un actif durable."
+  },
+  {
+    question: "Dans le Plan Comptable OHADA, les comptes de charges commencent par :",
+    options: ["1", "5", "6", "7"],
+    answer: 2,
+    explanation: "Les comptes 6 sont réservés aux charges."
+  },
+  {
+    question: "La déclaration de TVA doit être déposée au plus tard le :",
+    options: [
+      "5 du mois suivant",
+      "10 du mois suivant",
+      "15 du mois suivant",
+      "30 du mois suivant"
+    ],
+    answer: 2,
+    explanation: "Le délai courant est le 15 du mois suivant."
+  },
+  {
+    question: "Le taux normal de TVA au Burkina Faso est de :",
+    options: ["10%", "18%", "20%", "25%"],
+    answer: 1,
+    explanation: "Le taux standard est de 18%."
+  },
+  {
+    question: "Le principe d’égalité devant la loi administrative signifie :",
+    options: [
+      "Tous les citoyens sont traités de la même façon",
+      "L’administration agit hors cadre légal",
+      "Les lois diffèrent selon les individus",
+      "Seuls certains usagers sont prioritaires"
+    ],
+    answer: 0,
+    explanation: "Chaque citoyen bénéficie du même traitement."
+  },
+  {
+    question: "Quel est un exemple de collectivité territoriale ?",
+    options: ["Ministère", "Commune", "Parlement", "Tribunal"],
+    answer: 1,
+    explanation: "La commune est la collectivité territoriale de base."
+  },
+  {
+    question: "Un contrat administratif se caractérise par :",
+    options: [
+      "La liberté de résilier unilatéralement",
+      "Une relation de droit privé",
+      "La clause exorbitante du droit commun",
+      "L’absence de contrôle administratif"
+    ],
+    answer: 2,
+    explanation: "Les contrats admin contiennent souvent des clauses exorbitantes."
+  },
+  {
+    question: "Combien de TVA ajoute-t-on à un prix hors taxe de 100 à 18% ?",
+    options: ["8", "10", "18", "20"],
+    answer: 2,
+    explanation: "100 × 18% = 18."
+  },
+  {
+    question: "Quel sera le prix TTC d’un produit de 200 HT avec une TVA de 18% ?",
+    options: ["218", "236", "256", "278"],
+    answer: 1,
+    explanation: "200 + (200 × 0.18) = 236."
+  },
+  {
+    question: "Si le chiffre d’affaires est de 1 000 et les charges de 300, le résultat est :",
+    options: ["300", "700", "1 300", "0"],
+    answer: 1,
+    explanation: "Résultat = 1 000 − 300 = 700."
+  },
+  {	
+   question: "Quel est le taux réduit de TVA applicable au Burkina Faso ?",
+   options: ["5%", "10%", "12%", "15%"],
+   answer: 1,
+   explanation: "Le taux réduit est de 10%, souvent appliqué aux produits de première nécessité."
+ },
+ {
+  question: "Dans le Plan Comptable OHADA, les comptes de produits commencent par :",
+  options: ["1", "5", "6", "7"],
+  answer: 3,
+  explanation: "Les produits sont codés dans les comptes 7 du PCG OHADA."
+ },
+ {
+  question: "Quel est le délai légal pour contester une décision administrative au Burkina Faso ?",
+  options: ["15 jours", "1 mois", "2 mois", "6 mois"],
+  answer: 2,
+  explanation: "Un recours doit être introduit dans un délai de 2 mois après notification."
+},
+{
+  question: "Qu'est-ce qu'une provision en comptabilité ?",
+  options: ["Un actif immobilisé", "Une charge constatée d’avance", "Une dette probable mais incertaine", "Un produit à recevoir"],
+  answer: 2,
+  explanation: "Une provision anticipe une charge ou dette incertaine mais probable."
+},
+{
+  question: "Quel est le rôle du Conseil d'État dans le droit administratif ?",
+  options: ["Rédiger les lois", "Contrôler les collectivités territoriales", "Juger les litiges administratifs", "Gérer les finances publiques"],
+  answer: 2,
+  explanation: "Il est juge suprême pour les litiges administratifs et conseille le gouvernement."
+},
+{
+  question: "À quoi correspond le compte 512 dans le Plan Comptable OHADA ?",
+  options: ["Caisse", "Banque", "Clients", "Fournisseurs"],
+  answer: 1,
+  explanation: "Le compte 512 est dédié aux opérations bancaires."
+},
+{
+  question: "Le principe de neutralité fiscale signifie que :",
+  options: ["Les impôts doivent être proportionnels aux revenus", "Les impôts ne doivent pas influencer les décisions économiques", "Les impôts doivent être égaux pour tous", "Les impôts ne s’appliquent qu’aux entreprises"],
+  answer: 1,
+  explanation: "La fiscalité ne doit pas fausser les choix économiques des acteurs."
+},
+{
+  question: "Quelle est la durée maximale d’un contrôle fiscal ordinaire au Burkina Faso ?",
+  options: ["1 mois", "3 mois", "6 mois", "12 mois"],
+  answer: 1,
+  explanation: "La durée maximale est généralement de 3 mois, sauf dérogation."
+},
+{
+  question: "Quel est le rôle des collectivités territoriales ?",
+  options: ["Rédiger les lois nationales", "Gérer les affaires locales", "Contrôler les entreprises privées", "Superviser les ministères"],
+  answer: 1,
+  explanation: "Elles assurent la gestion des services publics locaux."
+},
+{
+  question: "Qu'est-ce qu'une charge constatée d'avance ?",
+  options: ["Une dépense payée mais non encore consommée", "Une dette à court terme", "Un produit différé", "Une provision pour litige"],
+  answer: 0,
+  explanation: "C’est une charge payée d’avance pour une période ultérieure."
+},
+{
+  question: "Le principe de légalité impose à l'administration :",
+  options: ["D’agir selon sa propre volonté", "D’obéir à toutes les lois en vigueur", "De se conformer aux tribunaux", "De respecter uniquement les décrets"],
+  answer: 1,
+  explanation: "Toute action administrative doit être justifiée par une loi ou un règlement."
+},
+{
+  question: "Quel est le taux d’impôt sur les sociétés au Burkina Faso ?",
+  options: ["25%", "27,5%", "30%", "35%"],
+  answer: 1,
+  explanation: "L’IS est fixé à 27,5% actuellement."
+},
+{
+  question: "Une clause exorbitante dans un contrat administratif :",
+  options: ["Favorise le prestataire", "Est illégale", "Confère des privilèges à l’administration", "Annule la responsabilité de l’État"],
+  answer: 2,
+  explanation: "Elle donne à l’administration des avantages non prévus dans le droit privé."
+},
+{
+  question: "Le rôle du Trésor public est principalement :",
+  options: ["De rédiger les lois fiscales", "De superviser les collectivités", "De collecter les impôts et gérer les finances", "De représenter l’État devant les juridictions"],
+  answer: 2,
+  explanation: "Le Trésor collecte et gère les recettes publiques."
+},
+{
+  question: "Quel est le délai de prescription pour une dette fiscale au Burkina Faso ?",
+  options: ["1 an", "3 ans", "5 ans", "10 ans"],
+  answer: 2,
+  explanation: "La prescription est généralement de 5 ans."
+},
+{ 
+  question: "Parmi ces nombres, lesquels sont des nombres premiers ?",
+  type: "multiSelect",
+  options: ["2", "3", "4", "5"],
+  answer: [0, 1, 3],
+  explanation: "Les nombres premiers sont 2, 3 et 5."
+},
+{
+  question: "Parmi ces valeurs, lesquelles sont supérieures à 10 ?",
+  type: "multiSelect",
+  options: ["8", "12", "15", "9"],
+  answer: [1, 2],
+  explanation: "12 et 15 sont > 10."
+},
+{
+  question: "Parmi ces déclarations, lesquelles sont obligatoirement déposées chaque mois au Burkina ?",
+  type: "multiSelect",
+  options: ["Déclaration de TVA", "Déclaration d’IS", "Déclaration d’IR", "Déclaration de cotisations sociales"],
+  answer: [0, 3],
+  explanation: "La TVA et les cotisations sociales se déclarent mensuellement."
+},
+{
+  question: "Parmi ces comptes OHADA, lesquels sont des comptes de bilan ?",
+  type: "multiSelect",
+  options: ["Actif immobilisé", "Capitaux propres", "Charges d’exploitation", "Produits financiers"],
+  answer: [0, 1],
+  explanation: "Seuls l’actif et les capitaux propres figurent au bilan."
+},
+{
+  question: "Quelles sont les sources directes du droit administratif ?",
+  type: "multiSelect",
+  options: ["Constitution", "Lois", "Règlements", "Directives de l’ONU"],
+  answer: [0, 1, 2],
+  explanation: "Constitution, lois et règlements sont des sources internes."
+},
+{
+  question: "Parmi ces équations, lesquelles admettent x = 2 comme solution ?",
+  type: "multiSelect",
+  options: ["2x + 1 = 5", "x² − 4 = 0", "x − 2 = 0", "x + 2 = 5"],
+  answer: [0, 1, 2],
+  explanation: "2x+1=5 ⇒ x=2 ; x²−4=0 ⇒ x=±2 ; x−2=0 ⇒ x=2."
+},
+{
+  question: "Parmi ces charges, lesquelles sont déductibles pour le calcul de l’IS ?",
+  type: "multiSelect",
+  options: ["Salaires", "Amortissements", "Dividendes distribués", "Frais de représentation"],
+  answer: [0, 1, 3],
+  explanation: "Salaires, amortissements et frais de représentation sont déductibles."
+},
+{
+  question: "Parmi ces éléments, lesquels figurent dans le compte de résultat ?",
+  type: "multiSelect",
+  options: ["Revenus d’exploitation", "Charges financières", "Immobilisations", "Emprunts"],
+  answer: [0, 1],
+  explanation: "Seuls produits et charges apparaissent au compte de résultat."
+},
+{
+  question: "Quelles conditions garantissent la validité d’un acte administratif unilatéral ?",
+  type: "multiSelect",
+  options: ["Signature de l’autorité compétente", "Motivation écrite", "Respect de la procédure", "Consentement du destinataire"],
+  answer: [0, 1, 2],
+  explanation: "Un acte admin doit être signé, motivé et régulier procéduralement."
+},
+{
+  question: "Parmi ces fractions, lesquelles simplifient à 1/2 ?",
+  type: "multiSelect",
+  options: ["2/4", "3/6", "4/9", "5/10"],
+  answer: [0, 1, 3],
+  explanation: "2/4, 3/6 et 5/10 valent tous 1/2."
+  }
+]
 
 function loadQuiz() {
   const container = document.getElementById("quiz-container");
@@ -54,30 +490,46 @@ function loadQuiz() {
   });
 }
 
+function loadQuiz() {
+  const container = document.getElementById("quiz-container");
+  quizData.forEach((item, idx) => {
+    const qDiv = document.createElement("div");
+    qDiv.className = "question";
+    qDiv.innerHTML = `<p><strong>Q${idx+1}.</strong> ${item.question}</p>`;
+    item.options.forEach((opt, i) => {
+      qDiv.innerHTML += `
+        <label>
+          <input type="checkbox" name="q${idx}" value="${i}">
+          ${opt}
+        </label>`;
+    });
+    qDiv.innerHTML += `<div id="explain${idx}" class="explanation"></div>`;
+    container.appendChild(qDiv);
+  });
+}
+
 function calculateScore() {
   let score = 0;
-  quizData.forEach((item, index) => {
-    const selected = document.querySelector(`input[name="q${index}"]:checked`);
-    const explanationBox = document.getElementById(`explain${index}`);
-    if (selected) {
-      if (parseInt(selected.value) === item.answer) {
-        score++;
-        explanationBox.innerHTML = "✅ Bonne réponse !<br>" + item.explanation;
-        explanationBox.style.color = "green";
-      } else {
-        explanationBox.innerHTML = "❌ Mauvaise réponse.<br>" + item.explanation;
-        explanationBox.style.color = "red";
-      }
+  quizData.forEach((item, idx) => {
+    const selected = Array.from(
+      document.querySelectorAll(`input[name="q${idx}"]:checked`)
+    ).map(el => +el.value).sort();
+    const correct = item.answer.slice().sort();
+    const explanationBox = document.getElementById(`explain${idx}`);
+    if (JSON.stringify(selected) === JSON.stringify(correct)) {
+      score++;
+      explanationBox.innerHTML = "✅ Bonne réponse !<br>" + item.explanation;
+      explanationBox.style.color = "green";
     } else {
-      explanationBox.innerHTML = "❌ Pas de réponse sélectionnée.<br>" + item.explanation;
-      explanationBox.style.color = "gray";
+      explanationBox.innerHTML = "❌ Mauvaise réponse.<br>" + item.explanation;
+      explanationBox.style.color = "red";
     }
   });
-  document.getElementById("score").innerHTML = `<h3>🎯 Résultat : ${score} / ${quizData.length}</h3>`;
+  document.getElementById("score").innerHTML = `<h3>Résultat : ${score} / ${quizData.length}</h3>`;
 }
 
 loadQuiz();
 </script>
 
 </body>
-  </html>
+</html>
