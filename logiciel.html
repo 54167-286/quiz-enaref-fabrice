@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="fr" class="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Logiciel COMPTA RFS PRO FCFA — V2.2</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+  :root { font-family: 'Inter', sans-serif; }
+  @media print {
+    @page { margin: 0; } 
+    .no-print { display: none !important; }
+    #appShell { padding: 0 !important; }
+    .document-preview { 
+        box-shadow: none !important; 
+        border: none !important; 
+        width: 100% !important; 
+        margin: 0 !important;
+        padding-left: 10mm !important;
+        padding-right: 10mm !important;
+    }
+  }
+  .active-tab { border-bottom: 3px solid #0284c7; color: #0284c7; }
+  #toast { transform: translateY(100px); transition: transform 0.25s cubic-bezier(.2,.9,.2,1); }
+  #toast.show { transform: translateY(0); }
+  .document-preview { transition: font-size 0.2s ease, transform 0.2s ease; }
+  /* sidebar drawer for mobile */
+  #sidebarDrawer { transition: transform 0.25s ease; transform: translateX(-110%); }
+  #sidebarDrawer.open { transform: translateX(0); }
+  /* overlay for drawer */
+  #drawerOverlay { transition: opacity 0.2s ease; }
+</style>
+</head>
+<body class="bg-gray-100 text-gray-800 antialiased">
+
+<div id="toast" class="fixed bottom-5 right-5 bg-black text-white px-6 py-3 rounded-xl shadow-2xl z-[100] font-bold flex items-center space-x-2 no-print" role="status" aria-live="polite">
+    <span id="toastMsg">Action réussie !</span>
+</div>
+
+<div id="authScreen" class="flex items-center justify-center min-h-screen bg-gray-50 p-4">
+    <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md text-center">
+        <h1 class="text-3xl font-black text-sky-900 mb-2">GESTION PRO</h1>
+        <p class="text-gray-500 mb-6 text-sm italic">Accès sécurisé v2.2</p>
+        
+        <div id="loginForm">
+            <input type="password" id="passwordInput" class="w-full p-4 border rounded-xl mb-4 text-center text-2xl" placeholder="••••" aria-label="mot de passe">
+            <button id="loginButton" class="w-full bg-sky-600 text-white p-4 rounded-xl font-bold hover:bg-sky-700 transition">OUVRIR LA SESSION</button>
+            <button onclick="showRecovery(true)" class="mt-4 text-xs text-sky-600 font-bold hover:underline">Mot de passe oublié ?</button>
+        </div>
+
+        <div id="recoveryForm" class="hidden border-t pt-6 mt-4">
+            <h2 class="text-sm font-black text-red-600 uppercase mb-4">Récupération du compte</h2>
+            <p id="displayQuestion" class="text-xs font-bold text-gray-600 mb-3 bg-gray-100 p-2 rounded italic"></p>
+            <input type="text" id="recoveryAnswerInput" class="w-full p-3 border rounded-lg mb-4 text-center" placeholder="Votre réponse...">
+            <button onclick="handleRecovery()" class="w-full bg-gray-800 text-white p-3 rounded-lg font-bold hover:bg-black transition mb-2">VÉRIFIER</button>
+            <button onclick="showRecovery(false)" class="text-[10px] text-gray-400 font-bold uppercase">Retour</button>
+        </div>
+    </div>
+</div>
+
+<div id="appShell" class="min-h-screen flex flex-col hidden">
+    <nav class="bg-white shadow-sm no-print border-b">
+        <div class="max-w-7xl mx-auto px-4 flex justify-between items-center h-16">
+            <div class="flex items-center space-x-4 h-full font-bold">
+                <button id="mobileSidebarToggle" onclick="toggleSidebar()" class="md:hidden p-2 rounded-lg bg-sky-50 text-sky-700 font-black" aria-label="Afficher les options">☰</button>
+                <div class="hidden md:flex space-x-8 h-full">
+                    <button onclick="switchTab('editor')" id="tab-btn-editor" class="px-1 active-tab">ÉDITEUR</button>
+                    <button onclick="switchTab('list')" id="tab-btn-list" class="px-1 text-gray-500">JOURNAL DES VENTES</button>
+                    <button onclick="switchTab('settings')" id="tab-btn-settings" class="px-1 text-gray-500">PARAMÈTRES</button>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button id="quickSave" class="hidden md:inline-block text-sky-700 font-bold px-4 py-2 bg-sky-50 rounded-lg hover:bg-sky-100">💾 Sauvegarder</button>
+                <button onclick="location.reload()" class="text-red-500 font-bold px-4 py-2 bg-red-50 rounded-lg hover:bg-red-100">QUITTER</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow p-4 md:p-8">
+        <div id="editorWrapper" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Sidebar / drawer -->
+            <aside id="sidebarDrawer" class="no-print p-4 bg-white rounded-2xl shadow-sm border border-gray-200 space-y-4 col-span-1 md:col-span-1 lg:col-span-1 md:block">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-black text-gray-400 text-xs uppercase tracking-widest">Infos Document</h3>
+                    <button onclick="suggestNextNumber()" class="text-[10px] bg-sky-600 text-white px-3 py-1 rounded-full font-bold uppercase hover:bg-sky-700">Auto-N°</button>
+                </div>
+                <select id="docType" class="w-full p-2 border rounded-lg bg-gray-50 font-bold text-sky-800" onchange="changeDocType(this.value)">
+                    <option value="invoice">Facture</option>
+                    <option value="bl">Bordereau de Livraison (BL)</option>
+                </select>
+                <div class="flex space-x-2">
+                    <input type="text" id="docNumber" class="flex-1 p-2 border rounded-lg font-mono" placeholder="N° Doc">
+                    <input type="date" id="docDate" class="flex-1 p-2 border rounded-lg text-sm">
+                </div>
+                <input type="text" id="docSubject" class="w-full p-2 border rounded-lg font-semibold text-sky-700" placeholder="Objet de la prestation">
+                <div class="pt-2 border-t mt-2">
+                    <input type="text" id="clientName" list="clientsList" class="w-full p-2 border rounded-t-lg font-bold bg-sky-50" placeholder="Nom du client" oninput="autoFillClient(this.value)">
+                    <textarea id="clientAddress" class="w-full p-2 border-x border-b rounded-b-lg h-16 text-xs" placeholder="Adresse complète..."></textarea>
+                    <datalist id="clientsList"></datalist>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 space-y-4">
+                    <h3 class="font-black text-gray-400 text-xs uppercase tracking-widest">Marges d'impression (mm)</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label class="text-[10px] font-bold text-gray-500 uppercase">Haut de page</label>
+                                <span id="valMarginTop" class="text-[10px] font-black text-sky-600">20mm</span>
+                            </div>
+                            <input type="range" id="marginTop" min="0" max="150" value="20" class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-sky-600" oninput="updateMargins()">
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <label class="text-[10px] font-bold text-gray-500 uppercase">Bas de page</label>
+                                <span id="valMarginBottom" class="text-[10px] font-black text-sky-600">20mm</span>
+                            </div>
+                            <input type="range" id="marginBottom" min="0" max="150" value="20" class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-sky-600" oninput="updateMargins()">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
+                    <h3 class="font-black text-gray-400 text-xs uppercase tracking-widest mb-4">Désignations & Prix</h3>
+                    <div id="lineItemsContainer" class="space-y-3"></div>
+                    <button onclick="addLine()" class="w-full mt-4 py-3 bg-gray-50 text-gray-700 rounded-xl border-2 border-dashed border-gray-200 text-xs font-bold uppercase hover:bg-gray-100 transition">+ Ajouter une ligne</button>
+                    <datalist id="articlesList"></datalist>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 space-y-3">
+                    <label class="flex items-center space-x-3 p-2 bg-orange-50 rounded-lg cursor-pointer">
+                        <input type="checkbox" id="withholdingToggle" onchange="toggleWithholding(this.checked)" class="w-5 h-5 accent-orange-600">
+                        <span class="font-bold text-orange-700 text-xs uppercase">Retenue de garantie (5%)</span>
+                    </label>
+                    <input type="text" id="signatoryName" class="w-full p-2 border rounded-lg text-sm font-bold" placeholder="Nom du signataire">
+                    <input type="text" id="signatoryRole" class="w-full p-2 border rounded-lg text-xs" placeholder="Titre / Fonction">
+                </div>
+
+                <div class="space-y-2">
+                    <button onclick="saveDocumentOnly()" class="w-full bg-emerald-600 text-white p-4 rounded-2xl font-black hover:bg-emerald-700 shadow-lg shadow-emerald-100 transition uppercase tracking-tighter">💾 Enregistrer au Journal</button>
+                    <button onclick="saveAndPrint()" class="w-full bg-sky-900 text-white p-4 rounded-2xl font-black hover:bg-black shadow-lg shadow-sky-200 transition uppercase tracking-tighter flex items-center justify-center space-x-2">
+                        <span>🖨️</span> <span>Enregistrer & Imprimer</span>
+                    </button>
+                    <button onclick="fitToPage()" class="w-full py-2 text-amber-600 bg-amber-50 rounded-xl font-black text-[10px] uppercase tracking-widest border border-amber-200 hover:bg-amber-100 transition">
+                        📏 Ajuster automatiquement à la page
+                    </button>
+                </div>
+            </aside>
+
+            <div class="lg:col-span-2">
+                <div id="documentPreviewContainer" class="document-preview bg-white p-8 md:p-12 shadow-2xl border border-gray-300 min-h-[29.7cm] w-[21cm] mx-auto origin-top" aria-label="Aperçu du document"></div>
+            </div>
+        </div>
+
+        <div id="view-list" class="hidden">
+            <div class="bg-white rounded-2xl shadow-xl border overflow-hidden">
+                <div class="p-6 bg-gray-50 flex justify-between items-center border-b">
+                    <h2 class="text-2xl font-black text-gray-800 uppercase italic">Historique des ventes</h2>
+                    <div id="totalStats" class="font-black text-2xl text-sky-600 bg-sky-50 px-6 py-2 rounded-2xl border border-sky-100">0 FCFA</div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-100 text-[10px] uppercase font-bold text-gray-500 border-b">
+                            <tr><th class="p-5">Réf</th><th class="p-5">Client</th><th class="p-5">Date</th><th class="p-5 text-right">Montant TTC</th><th class="p-5 text-center">Statut</th><th class="p-5 text-center">Actions</th></tr>
+                        </thead>
+                        <tbody id="savedDocumentsTable" class="divide-y"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-settings" class="hidden max-w-2xl mx-auto">
+            <div class="bg-white p-8 rounded-2xl shadow-xl border space-y-8">
+                <div>
+                    <h2 class="font-black text-lg mb-4 text-sky-900 uppercase">Données & Sauvegarde</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button onclick="exportDB()" class="bg-gray-800 text-white p-4 rounded-xl font-bold hover:bg-black transition">Exporter (.json)</button>
+                        <label class="bg-sky-50 text-sky-700 p-4 rounded-xl font-bold text-center cursor-pointer border-2 border-dashed border-sky-200 hover:bg-sky-100">
+                            Importer (Fusion) <input type="file" id="jsonInput" class="hidden" accept=".json" onchange="importDB(this)">
+                        </label>
+                    </div>
+                </div>
+
+                <div class="pt-6 border-t">
+                     <h2 class="font-black text-lg mb-4 text-red-600 uppercase">Sécurité accès</h2>
+                     <div class="space-y-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-400 uppercase">Changer le mot de passe</label>
+                            <input type="password" id="newPassword" class="w-full p-4 border rounded-xl" placeholder="Nouveau mot de passe">
+                        </div>
+                        <button onclick="updatePassword()" class="w-full bg-red-600 text-white p-4 rounded-xl font-bold hover:bg-red-700 transition">Valider le mot de passe</button>
+                     </div>
+                </div>
+
+                <div class="pt-6 border-t bg-orange-50 p-4 rounded-xl">
+                    <h2 class="font-black text-sm mb-4 text-orange-800 uppercase">Paramètres de récupération</h2>
+                    <div class="space-y-3">
+                        <input type="text" id="setQuestion" class="w-full p-3 border rounded-lg text-sm" placeholder="Question secrète">
+                        <input type="text" id="setAnswer" class="w-full p-3 border rounded-lg text-sm font-bold" placeholder="Réponse">
+                        <button onclick="saveSecuritySettings()" class="w-full bg-orange-600 text-white p-3 rounded-lg text-xs font-bold hover:bg-orange-700 transition">Enregistrer la sécurité</button>
+                    </div>
+                </div>
+
+                <div class="pt-6 border-t bg-red-50 p-4 rounded-xl">
+                    <h2 class="font-black text-sm mb-2 text-red-800 uppercase">Zone de Danger</h2>
+                    <p class="text-[10px] text-red-600 mb-4 italic">Efface définitivement toutes vos données locales.</p>
+                    <button onclick="resetApp()" class="w-full bg-white text-red-600 border-2 border-red-600 p-3 rounded-lg text-xs font-black hover:bg-red-600 hover:text-white transition uppercase">
+                        Réinitialiser tout le logiciel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="paymentModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-labelledby="payTitle">
+    <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl text-center">
+        <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl font-black">CFA</div>
+        <h3 id="payTitle" class="text-xl font-black mb-2">Encaisser le paiement</h3>
+        <div class="space-y-3">
+            <select id="payMethod" class="w-full p-4 border rounded-xl font-bold bg-gray-50"><option>Espèces</option><option>Chèque</option><option>Virement</option><option>Wave / OM</option></select>
+            <input type="text" id="payRef" class="w-full p-4 border rounded-xl" placeholder="Référence">
+            <button onclick="confirmPayment()" class="w-full bg-green-600 text-white p-5 rounded-2xl font-black uppercase transition">Valider</button>
+            <button onclick="closePaymentModal()" class="w-full text-gray-400 font-bold text-xs uppercase pt-2">Plus tard</button>
+        </div>
+    </div>
+</div>
+
+<!-- small overlay for sidebar on mobile -->
+<div id="drawerOverlay" class="fixed inset-0 bg-black/40 hidden z-40 no-print" onclick="toggleSidebar(false)"></div>
+
+<script>
+/* --- UTILITAIRES --- */
+function debounce(fn, wait=250){ let t; return function(...a){ clearTimeout(t); t=setTimeout(()=>fn.apply(this,a), wait); }; }
+function showToast(m, ms=2500){ const t=document.getElementById('toast'); document.getElementById('toastMsg').innerText=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), ms); }
+
+/* --- ETAT DE L'APPLICATION --- */
+let appState = {
+    documents: JSON.parse(localStorage.getItem('f_docs_v20') || '[]'),
+    password: localStorage.getItem('f_pass_v20') || 'demo',
+    recoveryQuestion: localStorage.getItem('f_quest_v20') || 'Quel est votre sport préféré ?',
+    recoveryAnswer: localStorage.getItem('f_ans_v20') || 'Football',
+    clients: JSON.parse(localStorage.getItem('f_clients_v20') || '{}'),
+    catalog: JSON.parse(localStorage.getItem('f_catalog_v20') || '{}'),
+    previewFontSize: 11,
+    activePaymentId: null,
+    editDoc: JSON.parse(localStorage.getItem('f_editdraft_v20') || JSON.stringify({ docType: 'invoice', docNumber: '', docDate: new Date().toISOString().substring(0, 10), docSubject: '', clientName: '', clientAddress: '', lineItems: [{ id: 1, description: '', qty: 1, duration: 1, price: 0, taxRate: 18 }], withholdingActive: false, signatoryName: '', signatoryRole: '', marginTop: 20, marginBottom: 20 }))
+};
+
+/* --- LOGIQUE DES MARGES --- */
+function updateMargins(){ const top=document.getElementById('marginTop').value; const bottom=document.getElementById('marginBottom').value; appState.editDoc.marginTop=parseInt(top); appState.editDoc.marginBottom=parseInt(bottom); document.getElementById('valMarginTop').innerText=top+"mm"; document.getElementById('valMarginBottom').innerText=bottom+"mm"; const preview=document.getElementById('documentPreviewContainer'); preview.style.paddingTop=top+"mm"; preview.style.paddingBottom=bottom+"mm"; scheduleSaveDraft(); }
+
+/* --- LOGIQUE DE RÉCUPÉRATION --- */
+function showRecovery(show){ document.getElementById('loginForm').classList.toggle('hidden', show); document.getElementById('recoveryForm').classList.toggle('hidden', !show); document.getElementById('displayQuestion').innerText=appState.recoveryQuestion; }
+function handleRecovery(){ const userAns=document.getElementById('recoveryAnswerInput').value.trim().toLowerCase(); const correctAns=appState.recoveryAnswer.trim().toLowerCase(); if(userAns===correctAns){ const newPass=prompt("Réponse correcte ! Entrez votre nouveau mot de passe :"); if(newPass){ appState.password=newPass; localStorage.setItem('f_pass_v20', newPass); alert("Mot de passe réinitialisé."); showRecovery(false); } } else alert("Réponse incorrecte."); }
+function saveSecuritySettings(){ const q=document.getElementById('setQuestion').value; const a=document.getElementById('setAnswer').value; if(!q||!a) return alert("Veuillez remplir les champs."); appState.recoveryQuestion=q; appState.recoveryAnswer=a; localStorage.setItem('f_quest_v20', q); localStorage.setItem('f_ans_v20', a); showToast("Sécurité mise à jour !"); }
+
+/* --- CHIFFRES EN LETTRES --- */
+function nombreEnLettres(n){ if(n===0) return "Zéro"; const unites=['','un','deux','trois','quatre','cinq','six','sept','huit','neuf']; const dizaines=['','dix','vingt','trente','quarante','cinquante','soixante','soixante-dix','quatre-vingt','quatre-vingt-dix']; const special={11:'onze',12:'douze',13:'treize',14:'quatorze',15:'quinze',16:'seize'}; function conv(v){ if(v<10) return unites[v]; if(v<17 && special[v]) return special[v]; if(v<20) return 'dix-'+unites[v-10]; if(v<70){ let d=Math.floor(v/10), u=v%10; return dizaines[d]+(u===1?'-et-un':(u!==0?'-'+unites[u]:'')); } if(v<80) return 'soixante-'+conv(v-60); if(v<100){ let d=Math.floor(v/10), u=v%10; return (d===8?'quatre-vingt':'quatre-vingt-')+conv(v-80); } if(v<1000){ let c=Math.floor(v/100), r=v%100; return (c>1?unites[c]+' ':'')+'cent'+(r!==0?' '+conv(r):''); } if(v<1000000){ let m=Math.floor(v/1000), r=v%1000; return (m>1?conv(m)+' ':'')+'mille'+(r!==0?' '+conv(r):''); } if(v<1000000000){ let mil=Math.floor(v/1000000), r=v%1000000; return conv(mil)+' million'+(mil>1?'s':'')+(r!==0?' '+conv(r):''); } return v.toLocaleString(); } return conv(Math.floor(n)).toUpperCase()+" FRANCS CFA"; }
+
+/* --- UTILISATION RAPIDE --- */
+function suggestNextNumber(){ if(appState.documents.length===0){ appState.editDoc.docNumber="001"; } else { const last=appState.documents[0].docNumber; const next=(parseInt(last.replace(/\D/g,''))||0)+1; appState.editDoc.docNumber=next.toString().padStart(3,'0'); } document.getElementById('docNumber').value=appState.editDoc.docNumber; schedulePreview(); scheduleSaveDraft(); }
+
+function updateDatalists(){ const cl=document.getElementById('clientsList'); cl.innerHTML=''; Object.keys(appState.clients).forEach(n => cl.innerHTML+=`<option value="${n}">`); const al=document.getElementById('articlesList'); al.innerHTML=''; Object.keys(appState.catalog).forEach(n => al.innerHTML+=`<option value="${n}">`); }
+
+function autoFillClient(name){ if(appState.clients[name]){ appState.editDoc.clientAddress=appState.clients[name]; document.getElementById('clientAddress').value=appState.editDoc.clientAddress; schedulePreview(); scheduleSaveDraft(); showToast("Client reconnu !"); } }
+
+function autoFillArticle(id, name){ if(appState.catalog[name]){ const i=appState.editDoc.lineItems.find(x=>x.id===id); i.price=appState.catalog[name].price; i.taxRate=appState.catalog[name].tax; renderLines(); schedulePreview(); scheduleSaveDraft(); showToast("Données appliquées !"); } }
+
+function fitToPage(){ const container=document.getElementById('documentPreviewContainer'); container.style.transform='none'; container.style.transformOrigin='top center'; const parentW = Math.min(window.innerWidth*0.95, document.documentElement.clientWidth*0.95); const parentH = Math.min(window.innerHeight*0.8, document.documentElement.clientHeight*0.8); const cw = container.offsetWidth; const ch = container.offsetHeight; const scale = Math.min(parentW / cw, parentH / ch, 1); container.style.transform = `scale(${scale})`; appState.previewFontSize = parseFloat(getComputedStyle(container).fontSize); showToast('Ajusté à la page'); }
+
+/* --- GÉNÉRATION DU DOCUMENT (DEBOUNCED PREVIEW) --- */
+const schedulePreview = debounce(updatePreview, 150);
+function updatePreview(){ const d=appState.editDoc; const isBL=d.docType==='bl'; let totalHT=0, taxGroups={}, rows='';
+    d.lineItems.forEach(i=>{ let lHT=isBL ? (i.qty * i.duration) : (i.qty * i.duration * i.price); totalHT+=lHT; if(!isBL && i.taxRate>0){ taxGroups[i.taxRate]=(taxGroups[i.taxRate]||0)+(lHT*(i.taxRate/100)); } rows+=`<tr style="border-bottom:1px solid #eee;"><td style="padding:8px; font-size:0.95em;">${i.description}</td><td align="center">${i.qty}</td><td align="center">${i.duration}</td>${!isBL?`<td align="right">${formatFCFA(i.price)}</td>`:''} <td align="right" style="font-weight:900;">${isBL?lHT:formatFCFA(lHT)}</td></tr>`; });
+    let taxTotal=0, taxRows=''; Object.keys(taxGroups).forEach(r=>{ taxTotal+=taxGroups[r]; taxRows+=`<tr><td style="padding:4px;">TVA (${r}%)</td><td align="right">${formatFCFA(taxGroups[r])}</td></tr>`; });
+    const ret = d.withholdingActive ? totalHT*0.05 : 0; const net = totalHT + taxTotal - ret; appState.lastNet = net;
+    const preview=document.getElementById('documentPreviewContainer'); preview.style.fontSize=appState.previewFontSize+'pt'; preview.style.paddingTop=(d.marginTop||20)+"mm"; preview.style.paddingBottom=(d.marginBottom||20)+"mm";
+    preview.innerHTML = `
+        <div style="font-family:Inter,sans-serif;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:25px; flex-wrap:wrap;">
+                <div><h1 style="font-size:2.2em; font-weight:900; text-transform:uppercase; line-height:1; color:#0c4a6e;">${isBL?'Bordereau':'Facture'}</h1><p style="margin-top:5px;">Réf : <strong>${d.docNumber}</strong></p><p>Date : ${new Date(d.docDate).toLocaleDateString('fr-FR')}</p></div>
+                <div style="width:280px; border:2px solid #000; padding:15px; background:#f8fafc; margin-top:8px;"><strong>Client :</strong><br><span style="font-size:1.1em; font-weight:900;">${d.clientName}</span><br><span style="font-size:0.8em; white-space:pre-line;">${d.clientAddress}</span></div>
+            </div>
+            <div style="margin-bottom:20px; border-bottom:2px solid #000; padding-bottom:5px;"><span style="font-weight:bold; text-decoration:underline;">OBJET :</span> <span style="font-weight:900; font-size:1em; color:#0c4a6e; margin-left:10px;">${d.docSubject}</span></div>
+            <table width="100%" style="border-collapse:collapse; margin-bottom:20px;">
+                <tr style="background:#000; color:#fff; font-size:0.75em;"><th style="padding:10px; text-align:left;">DÉSIGNATION</th><th style="padding:10px;">QTÉ</th><th style="padding:10px;">DURÉE</th>${!isBL?'<th style="padding:10px; text-align:right;">P.U HT</th>':''}<th style="padding:10px; text-align:right;">TOTAL HT</th></tr>
+                ${rows}
+            </table>
+            <div style="display:flex; justify-content:flex-end;">
+                <div style="width:320px;">
+                    <table width="100%" style="border-collapse:collapse;">
+                        ${!isBL?`
+                            <tr><td style="padding:4px; font-weight:bold;">TOTAL HT</td><td align="right">${formatFCFA(totalHT)}</td></tr>
+                            ${taxRows}
+                            ${ret>0?`<tr style="color:#c2410c;"><td style="padding:4px;">Retenue (5%)</td><td align="right">-${formatFCFA(ret)}</td></tr>`:''}
+                            <tr style="background:#000; color:#fff; font-weight:900; font-size:1.2em;"><td style="padding:8px;">NET À PAYER:</td><td align="right" style="padding:8px;">${formatFCFA(net)}</td></tr>
+                        ` : `
+                            <tr style="background:#000; color:#fff; font-weight:900; font-size:1.2em;"><td style="padding:10px;">TOTAL UNITÉS</td><td align="right" style="padding:10px;">${totalHT}</td></tr>
+                        `}
+                    </table>
+                </div>
+            </div>
+            ${!isBL?`<div style="margin-top:20px; border:1.5px solid #000; padding:10px; background:#fafafa;"><small style="font-weight:bold; text-transform:uppercase; color:#666; font-size:0.7em;">Arrêté la présente facture à la somme de :</small><div style="font-weight:900; font-style:italic; margin-top:2px; font-size:1em;">${nombreEnLettres(net)}</div></div>`:''}
+            <div style="margin-top:30px; display:flex; ${!isBL?'justify-content:flex-end':'justify-content:space-between'}">
+                ${isBL?`<div style="text-align:center; width:200px;"><p style="text-decoration:underline; font-weight:bold; margin-bottom:50px;">L'Expéditeur</p><strong>${d.signatoryName}</strong></div>`:''}
+                <div style="text-align:center; width:220px;"><p style="text-decoration:underline; font-weight:bold; margin-bottom:50px;">${isBL?'Le Réceptionnaire':'Signature & Cachet'}</p><strong>${!isBL?d.signatoryName:''}</strong><br><small>${!isBL?d.signatoryRole:''}</small></div>
+            </div>
+        </div>`;
+}
+
+/* --- EDITEUR --- */
+function renderLines(){ const c=document.getElementById('lineItemsContainer'); c.innerHTML=''; const frag=document.createDocumentFragment(); appState.editDoc.lineItems.forEach(i=>{ const d=document.createElement('div'); d.className='p-4 bg-gray-50 border rounded-2xl text-xs space-y-2 relative group'; d.innerHTML=`\
+            <button onclick="remL(${i.id})" class="absolute top-2 right-2 text-red-200 group-hover:text-red-500 font-bold" aria-label="Supprimer">×</button>\
+            <input type="text" list="articlesList" value="${escapeHtml(i.description)}" class="w-full p-2 border rounded-lg font-bold" oninput="upIt(${i.id},'description',this.value); autoFillArticle(${i.id}, this.value)" placeholder="Désignation...">\
+            <div class="flex items-center space-x-2">\
+                <div class="w-16"><label class="text-[8px] font-bold text-gray-400 block ml-1 uppercase">Qté</label><input type="number" value="${i.qty}" class="w-full p-2 border rounded-lg" oninput="upIt(${i.id},'qty',this.value)"></div>\
+                <div class="w-16"><label class="text-[8px] font-bold text-gray-400 block ml-1 uppercase">Durée</label><input type="number" value="${i.duration}" class="w-full p-2 border rounded-lg" oninput="upIt(${i.id},'duration',this.value)"></div>\
+                <div class="flex-1"><label class="text-[8px] font-bold text-gray-400 block ml-1 uppercase">P.U HT</label><input type="number" value="${i.price}" class="w-full p-2 border rounded-lg font-black text-sky-800" oninput="upIt(${i.id},'price',this.value)"></div>\
+                <div class="w-20"><label class="text-[8px] font-bold text-gray-400 block ml-1 uppercase">TVA</label><select onchange="upIt(${i.id},'taxRate',this.value)" class="w-full p-2 border rounded-lg bg-white font-bold text-emerald-600">\
+                    <option value="18" ${i.taxRate==18?'selected':''}>18%</option>\
+                    <option value="10" ${i.taxRate==10?'selected':''}>10%</option>\
+                    <option value="0" ${i.taxRate==0?'selected':''}>Exonéré</option>\
+                </select></div>\
+            </div>`; frag.appendChild(d); }); c.appendChild(frag); }
+
+function escapeHtml(str){ if(!str) return ''; return String(str).replace(/[&<>\"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m]; }); }
+function upIt(id,f,v){ const i=appState.editDoc.lineItems.find(x=>x.id===id); i[f]=f==='description'?v:parseFloat(v)||0; schedulePreview(); scheduleSaveDraft(); }
+function addLine(){ appState.editDoc.lineItems.push({id:Date.now(),description:'',qty:1,duration:1,price:0,taxRate:18}); renderLines(); schedulePreview(); scheduleSaveDraft(); }
+function remL(id){ if(appState.editDoc.lineItems.length>1){ appState.editDoc.lineItems=appState.editDoc.lineItems.filter(x=>x.id!==id); renderLines(); schedulePreview(); scheduleSaveDraft(); } }
+
+/* --- ACTIONS, SAUVEGARDE ET IMPORT --- */
+function saveDocumentOnly(){ if(!appState.editDoc.docNumber) return alert("Indiquez un numéro !"); if(appState.editDoc.clientName){ appState.clients[appState.editDoc.clientName]=appState.editDoc.clientAddress; localStorage.setItem('f_clients_v20', JSON.stringify(appState.clients)); }
+    appState.editDoc.lineItems.forEach(i=>{ if(i.description && i.price>0){ appState.catalog[i.description]={ price:i.price, tax:i.taxRate }; } }); localStorage.setItem('f_catalog_v20', JSON.stringify(appState.catalog)); updateDatalists(); const newDoc={ ...JSON.parse(JSON.stringify(appState.editDoc)), id:Date.now(), totalNet:appState.lastNet, status:'En attente' }; appState.documents.unshift(newDoc); localStorage.setItem('f_docs_v20', JSON.stringify(appState.documents)); localStorage.removeItem('f_editdraft_v20'); showToast('Sauvegardé !'); }
+
+function saveAndPrint(){ fitToPage(); saveDocumentOnly(); setTimeout(()=>window.print(), 400); }
+
+/* --- IMPORT/FUSION/RESET --- */
+function exportDB(){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(appState)],{type:'application/json'})); a.download=`backup_gestion_${new Date().toISOString().split('T')[0]}.json`; a.click(); }
+
+function importDB(input){ const reader=new FileReader(); reader.onload=(e)=>{ try{ const data=JSON.parse(e.target.result); const existingIds=new Set(appState.documents.map(d=>d.id)); if(data.documents){ data.documents.forEach(doc=>{ if(!existingIds.has(doc.id)) appState.documents.push(doc); }); appState.documents.sort((a,b)=>b.id-a.id); } appState.clients={ ...appState.clients, ...(data.clients||{}) }; appState.catalog={ ...appState.catalog, ...(data.catalog||{}) }; localStorage.setItem('f_docs_v20', JSON.stringify(appState.documents)); localStorage.setItem('f_clients_v20', JSON.stringify(appState.clients)); localStorage.setItem('f_catalog_v20', JSON.stringify(appState.catalog)); alert('Données fusionnées avec succès !'); location.reload(); }catch(err){ alert('Erreur de fichier.'); } }; reader.readAsText(input.files[0]); }
+
+function resetApp(){ if(confirm('ATTENTION : Cela supprimera TOUTES vos données (factures, clients, mots de passe). Continuer ?')){ if(confirm('Dernière vérification : confirmer la suppression totale ?')){ localStorage.clear(); location.reload(); } } }
+
+/* --- LISTE --- */
+function renderList(){ const b=document.getElementById('savedDocumentsTable'); b.innerHTML=''; let tot=0; appState.documents.forEach(d=>{ const isP=d.status==='Payé'; if(isP) tot+=d.totalNet; b.innerHTML+=`<tr class="text-sm hover:bg-gray-50 border-b">\
+            <td class="p-5 font-bold text-sky-800">${d.docNumber}</td><td class="p-5 font-medium">${escapeHtml(d.clientName)}</td>\
+            <td class="p-5 text-gray-500">${new Date(d.docDate).toLocaleDateString()}</td><td class="p-5 text-right font-black">${formatFCFA(d.totalNet)}</td>\
+            <td class="p-5 text-center"><span class="px-3 py-1 rounded-full text-[10px] font-black uppercase ${isP?'bg-green-100 text-green-700':'bg-orange-100 text-orange-700'}">${d.status}</span></td>\
+            <td class="p-5 text-center space-x-3">\
+                <button onclick="duplicateDoc(${d.id})" class="text-sky-600 font-bold hover:underline">Copier</button>\
+                ${!isP?`<button onclick="openPayment(${d.id})" class="bg-sky-600 text-white px-3 py-1 rounded-lg font-bold">Encaisser</button>`:''}\
+                <button onclick="delDoc(${d.id})" class="text-red-300 hover:text-red-600 font-bold">🗑</button>\
+            </td>\
+        </tr>`; }); document.getElementById('totalStats').innerText=formatFCFA(tot); }
+
+function openPayment(id){ appState.activePaymentId=id; document.getElementById('paymentModal').classList.remove('hidden'); document.getElementById('paymentModal').focus(); }
+function closePaymentModal(){ document.getElementById('paymentModal').classList.add('hidden'); }
+function confirmPayment(){ const d=appState.documents.find(x=>x.id===appState.activePaymentId); d.status='Payé'; localStorage.setItem('f_docs_v20', JSON.stringify(appState.documents)); closePaymentModal(); renderList(); showToast('Encaissé !'); }
+function delDoc(id){ if(confirm('Supprimer ?')){ appState.documents=appState.documents.filter(x=>x.id!==id); localStorage.setItem('f_docs_v20', JSON.stringify(appState.documents)); renderList(); showToast('Supprimé'); } }
+
+function duplicateDoc(id){ const orig=appState.documents.find(x=>x.id===id); appState.editDoc=JSON.parse(JSON.stringify(orig)); appState.editDoc.id=Date.now(); appState.editDoc.docDate=new Date().toISOString().substring(0,10); switchTab('editor'); initEditorValues(); suggestNextNumber(); }
+
+function initEditorValues(){ ['docNumber','docDate','docSubject','clientName','clientAddress','signatoryName','signatoryRole','marginTop','marginBottom'].forEach(f=>{ const el=document.getElementById(f); if(el) el.value=appState.editDoc[f]|| (f.includes('Margin')?20:'' ); }); document.getElementById('docType').value=appState.editDoc.docType; document.getElementById('withholdingToggle').checked=appState.editDoc.withholdingActive; updateMargins(); renderLines(); schedulePreview(); }
+
+/* --- AUTOSAVE DRAFT --- */
+const scheduleSaveDraft = debounce(()=>{ localStorage.setItem('f_editdraft_v20', JSON.stringify(appState.editDoc)); showToast('Brouillon sauvegardé', 1200); }, 800);
+
+/* --- SYSTÈME ET TABS --- */
+function switchTab(t){ ['editor','list','settings'].forEach(v=>{ document.getElementById('view-'+v).classList.add('hidden'); document.getElementById('tab-btn-'+v).classList.remove('active-tab','text-sky-600'); }); document.getElementById('view-'+t).classList.remove('hidden'); const btn=document.getElementById('tab-btn-'+t); if(btn) btn.classList.add('active-tab','text-sky-600'); if(t==='list') renderList(); }
+
+function toggleSidebar(open){ const s=document.getElementById('sidebarDrawer'); const overlay=document.getElementById('drawerOverlay'); if(typeof open==='boolean'){ if(open){ s.classList.add('open'); overlay.classList.remove('hidden'); } else { s.classList.remove('open'); overlay.classList.add('hidden'); } } else { const isOpen=s.classList.contains('open'); if(isOpen){ s.classList.remove('open'); overlay.classList.add('hidden'); } else { s.classList.add('open'); overlay.classList.remove('hidden'); } } }
+
+/* --- LOGIN --- */
+document.getElementById('loginButton').onclick = ()=>{ if(document.getElementById('passwordInput').value===appState.password){ document.getElementById('authScreen').classList.add('hidden'); document.getElementById('appShell').classList.remove('hidden'); init(); } else alert('Refusé'); };
+
+function init(){ ['docNumber','docDate','docSubject','clientName','clientAddress','signatoryName','signatoryRole'].forEach(f=>{ const el=document.getElementById(f); if(el) el.addEventListener('input', (e)=>{ appState.editDoc[f]=e.target.value; schedulePreview(); scheduleSaveDraft(); }); }); updateDatalists(); renderLines(); schedulePreview(); // keyboard shortcuts
+    window.addEventListener('keydown', (e)=>{ if((e.ctrlKey||e.metaKey)&& e.key.toLowerCase()==='s'){ e.preventDefault(); saveDocumentOnly(); showToast('Sauvegardé (Ctrl+S)'); } if((e.ctrlKey||e.metaKey)&& e.key.toLowerCase()==='p'){ e.preventDefault(); saveAndPrint(); } if(e.key==='Escape'){ const pm=document.getElementById('paymentModal'); if(!pm.classList.contains('hidden')) closePaymentModal(); const sb=document.getElementById('sidebarDrawer'); if(sb.classList.contains('open')) toggleSidebar(false); } });
+    // quick save button
+    const qs=document.getElementById('quickSave'); if(qs){ qs.addEventListener('click', ()=>{ saveDocumentOnly(); }); qs.classList.remove('hidden'); }
+}
+
+function changeDocType(v){ appState.editDoc.docType=v; schedulePreview(); scheduleSaveDraft(); }
+function toggleWithholding(v){ appState.editDoc.withholdingActive=v; schedulePreview(); scheduleSaveDraft(); }
+function updatePassword(){ appState.password=document.getElementById('newPassword').value; localStorage.setItem('f_pass_v20', appState.password); alert('Mis à jour !'); }
+
+</script>
+</body>
+</html>
